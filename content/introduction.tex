@@ -1,0 +1,28 @@
+%----------------------------------------------------------------------------
+\chapter{\bevezetes}
+%----------------------------------------------------------------------------
+
+A világ az egyre növekvő automatizáltság felé halad, de a múltban használt klasszikus programozási módszerek nem alkalmasak minden feladat megoldására. Itt jön képbe a gépi tanulás, mely ezen feladatokban áttöréseket ért el a közelmúltban, például az autonóm autó technológiák terén. Viszont a gépi tanulási módszereknek nem rendelkeznek a klasszikus programozás egy fontos jellemzőjével, ami a magyarázhatóság. Egy konkrét célra készített programnál a fejlesztők pontosan tudják, hogy milyen módon áll elő a kimenet, így sok bizonyítható, hogy az megfelelő minőséggel oldja-e meg feladatát (implementációs hibáktól eltekintve). Gépi tanulásnál viszont általános algoritmusokról beszélünk, melyeket egy konkrét feladatra megtanítva ez az információ a belső paraméterekbe van belekódolva, emberileg értelmezhetetlen módon. Ez alól vannak kivételek, például a lineáris modellel, vagy a döntési fák, de a gyakorlatban bonyolultabb megoldások az elterjedtek. 
+	
+Ha a gépi tanuló módszerek értelmezhetőek lennének, az több szempontból is hasznos lenne. Rávilágíthat olyan hibákra, amiket a példákon való tesztelés nem hoz felszínre, így javítva a rendszerek megbízhatóságát. Bizalmat kelthet a rendszerek felhasználóiban, azáltal hogy jobban megértik a működését. Vagy meggyorsíthatja a fejlesztési folyamatokat, azáltal, hogy korán rávilágít problémákra.
+
+A magyarázatgenerálás célja az értelmezhetőség megteremtése komplexebb gépi tanulási modelleknél is. Ezen cél elérésére több különböző módszer létezik. Vannak globális módszerek, melyek például megadják a bemeneti paraméterek fontosságát a hálóban. Ezek hiányossága viszont, hogy általános képet festenek, ami nem veszi figyelembe az attributumok interakcióját. A feladat megközelíthető lokális módon is, azaz a magyarázat egy bemenet kiértékelésére vonatkozik. Ezzel egyszerre csak egy kis részét vizsgálhatjuk a modellnek, de több példa felhasználásával közelebb juthatunk egy átfogó magyarázathoz. A dolgozat fókuszában ezen lokális megközelítés egy megvalósítása áll, a LIME (Linear Model-Agnostic Explanations) rendszer, ami lokális model-agnosztikus, azaz bármely gápi tanulási módszerrel kompatibilis magyarázatokat állít elő a modell viselkedésének lokális közelítésével.
+
+\section{Szakdolgozat célja}
+
+A dokumentum fő célja ismertetni működési alapelvét és használatát a LIME rendszernek, illetve megvizsgálni működését egy neurális hálózaton.
+
+Az önálló laboratórium során a depresszió genetikai komponensét vizsgáltam neurális háló segítségével. Az adathalamz zajossága és mérete miatt ez nehézségekbe ütközött. Létre lett hozva viszont egy mesterségesen generált célváltozó, mely kevésé zajos. Mivel ez a célváltozó hasonló jellegű mint az eredeti, segíthet olyan paraméterek és módszerek megtalálásban, amivel az eredeti is jobb eredménnyel approximálható.
+
+Ezáltal a dolgozat másodlagos célja optimális pontosságú hálózat találása ezen mesterséges célváltozóra. A két feladat azon módon kapcsolódik, hogy a LIME rendszert ezen hálózattal fogom tesztelni. Ez azért is előnyös kombináció, mivel rendelkezésre állnak azon szabályok mely alapján a célváltozó generálva lett, így ellenőrizhető a LIME által visszaadott szignifikáns attribútumok validitása. Ezen kívül az attribútumok nagy száma (\~2400) segít megvizsgálni, hogy szélsőségesen sok attribútum esetén hogy viselkedik a LIME rendszer.
+
+\section{Szakdolgozat felépítése}
+
+A dolgozat először az elméleti alapokat tárgyalja. \chapref{ch:nn} ismerteti a neurális hálók általános működését és azon általános építőelemeit melyek a dolgozatban ismertetett háló részei. Aztán \chapref{ch:exp} beszél a magyarázatgenerálásról általánosságban. 
+
+\chapref{ch:lime} a LIME rendszer elméleti hátteréről és felépítéséről beszél.
+
+\chapref{ch:example} a lefektetett elméleti alapok és rendszerek gakorlati működését mutatja be. Bemutatja a lime rendszer működését, külső példa adathalmaz segítséglvel, majd a fentebb ismertetett saját adathalmazon. A fejezet ismerteti a tanítási folyamatát is az ezen adathalmazra alkalmazott neurális hálónak.
+
+
+
