@@ -1,0 +1,124 @@
+\chapter{Gyakorlati alkalmazás}\label{ch:example}
+\section{Ateizmus adathalmaz}
+
+
+
+\section{Genetiaki adabázis}
+
+A magyarázatgenerálás sok attribútum esetén a legfontosabb, és ez esetben értékelhető legjobban az tulajdonság kiválasztás pontossága.Ez az adathalmaz 79272 példát és 2400 tulajdonságot tartalmaz, ezért ideális a rendszer szélsőséges attribútumszám esetén nyújtott teljesítményének tesztelésére. A tulajdonságok valós adatokból kerültek ki, de a használt célváltozó mesterségesen generált. A generáló valószínűségi modell paraméterei rendelkezésre állnak, ami a magyarázatok minőségének kiértékelését is lehetővé teszi.
+
+Az adatbázis kategorikus formátumú genetikai változókból áll. Minden genetikai változó három értéket vehet fel:
+\begin{itemize}
+	\item  0 ha mindkét szülőtől kapott nukleotid azonos és a populációban gyakrabban megfigyelt értéket veszi fel
+	\item 1 ha a szülőktől különböző nukleotidok származnak
+	\item 2 ha a szülőktől azonos, a populációban ritkábban előforduló nukleotid van jelen
+\end{itemize}
+A nukleotidok gyakorisága az adatbázisban megfigyelt eloszlás alapján van meghatározva. Mikor mindkét variáció jelen van nem lehet tudni, hogy melyik a domináns, ezért az 1 kódolással, mintegy köztes érték van reprezentálva. Ezen kívül jelen van még három nem genetikai változó is, a stressz, a nem és a kor. Egy valós célváltozó esetén ezeknek fontos szerepük lenne mert szabályozzák a génexpressziót, de mivel mesterséges a célváltozó, nincs külön szemantikus jelentésük. A kor és stressz is kategorikus módon vannak megadva, három értéket vehetnek fel, amik korosztályoknak és stressz kategóriáknak felelnek meg.
+	
+\section{Modell optimalizálás folyamata}
+
+A szélsőséges számú tulajdonság problémákat jelent a tanítás szempontjából, megoldásuk pedig egyedi megoldásokat kíván.
+
+\subsection{Négyzetes paraméter szám}
+	
+Egy lineárisan nem szeparálható probléma megoldásához legalább egy rejtett rétegre szükség van. Ez a rejtett réteg nem lehet túl kis méretű, mivel az jelentősen csökkentené az információt amivel a további rétegek dolgozhatnak.
+Ezért elengedhetetlen, hogy az első rejtett rétegnek legalább százas nagyságrendben legyen a neuronszáma. Mivel sűrű kötés esetén a súlyok száma a szomszédos rétegek neuronszámának a szorzata, ez nagy súlyszámot okoz. Például 512 neuronos réteg és 2400 bemeneti tulajdonság esetén $2400*512 = 23.5M$ súly van, ami például 10\%-a a GoogleNet által használtnak, pedig az képek több mint 100 kategóriás klasszifikációjára lett kifejlesztve. 2400 tulajdonság pedig genetikai adatbázisok esetén kevésnek is számít, 24000 változó esetén a súlyok száma már 12 millió, ami rengeteg kapacitást ad a háló számára túltanuláshoz.
+
+\subsection{Lokális kötésű első réteg}
+
+Kézenfekvő megoldás a négyzetes paraméterszámra olyan struktúra alkalmazása, melynek lineáris a paraméterszáma. Ha a réteg minden neuronjába konstans számú variáns futna be, nagy tulajdonságszámnál sem következne be paraméterszám robbanás. Ezt valósítja meg a lokális kötésű réteg, melyben minden neuron a bemeneti variánsoknak egy csúszó-ablak által meghatározott részét kapja bemenetként. Hasonló módon egy 1 dimenziós  konvolúciós réteghez, azzal a különbséggel, hogy az ablak minden pozíciójában változnak a súlyok.
+
+\begin{figure}[H]
+    \centering
+	\begin{tikzpicture}[circle]
+	
+	% first layer neurons
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (a) at (0cm,0cm) {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (b) [below=0.3cm of a] {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (c) [below=0.3cm of b] {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (d) [below=0.3cm of c] {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (e) [below=0.3cm of d] {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (f) [below=0.3cm of e] {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm] (g) [below=0.3cm of f] {};
+	
+	%second layer neurons 
+	\node[line width=0.5mm,draw,minimum size=0.5cm,red] (aa) at (3cm,-0.85cm) {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm,green] (bb) [below=1.15cm of aa] {};
+	\node[line width=0.5mm,draw,minimum size=0.5cm,blue] (cc) [below=1.15cm of bb] {};
+	
+	%connections of aa
+	\draw[line width=0.5mm,red] (a) -- (aa);
+	\draw[line width=0.5mm,red] (b) -- (aa);
+	\draw[line width=0.5mm,red] (c) -- (aa);
+	%connections of bb
+	\draw[line width=0.5mm,green] (c) -- (bb);
+	\draw[line width=0.5mm,green] (d) -- (bb);
+	\draw[line width=0.5mm,green] (e) -- (bb);
+	
+	%connections of cc
+	\draw[line width=0.5mm,blue] (e) -- (cc);
+	\draw[line width=0.5mm,blue] (f) -- (cc);
+	\draw[line width=0.5mm,blue] (g) -- (cc);
+	
+	\end{tikzpicture}
+	\caption{Sematikus ábrája egy lokális kötésű rétegnek, aminek ablakszélessége 3 stride-ja pedig 2}
+\end{figure}
+
+Ezzel a megoldással szabályozható a paraméterek száma, úgy hogy közben az első rejtett réteg neuronszáma is tetszőlegesen állítható. A struktúra önmagában nem biztosítja, hogy minden bemenet azonos számú neuronba fusson be, de azzal a megszorítással hogy a stride osztója kell legyen az ablak szélességnek, egyszerűen biztosítható.
+
+\begin{figure}[H]
+    
+		\begin{subfigure}{\linewidth}
+		\centering
+			\begin{tikzpicture}
+               \begin{axis}[width=0.5\textwidth,xmin=0,xmax=200,every axis plot/.append style={thick},legend entries =  {tanító hiba\\validációs hiba\\},legend pos=north west]
+                \addplot+[mark=none] table [x=epochs, y=training, col sep=comma] {data/dense.csv};
+                \addplot+[mark=none] table [x=epochs, y=validation, col sep=comma,mark=none] {data/dense.csv};
+        \end{axis}
+        \begin{axis}[at={(0.53\linewidth,0)},width=0.5\textwidth,xmin=0,xmax=200,every axis plot/.append style={thick},ylabel style={rotate=-90},legend entries =  {tanító hiba\\validációs hiba\\}]
+        \addplot+[mark=none] table [x=epochs, y=training, col sep=comma] {data/local.csv};
+        \addplot+[mark=none] table [x=epochs, y=validation, col sep=comma,mark=none] {data/local.csv};
+        \end{axis}
+            \end{tikzpicture}
+		\end{subfigure}
+	\caption{Egyébként azonos konfigurációk bal oldalon sűrű, jobb oldalon lokális kötésű első rejtett réteggel  \label{densevslocal}}
+\end{figure}
+
+\Aref{densevslocal} ábrán látható, hogy 512 neuron tartalmazó sűrű kötésű első réteg esetén a milliós nagyságrendű paraméterszám egyszerűvé teszi a hálózatnak, hogy teljesen rátanuljon a tanítómintákra. A kétszázadik epoch környékén a tanító adatokon vett hiba effektíve nulla, 
+
+\subsection{Tanítás nehézségei}
+
+A nagy számú tulajdonság szükségszerűen megnöveli az esélyét, hogy egy tulajdonság véletlen alapján korrelációt mutasson a célváltozóval. Ha a tulajdonságok egy részhalmazának tetszőleges függvényét vesszük, méginkább nő valószínűsége, hogy létezik olyan ami a véletlen folytán mutat nagy korrelációt. Ezen körülmények nagyon egyszerűvé teszik a túltanulást. A hiperparaméter optimalizálásnak fő nehézsége a túltanulás és a hálózat túlzott lekorlátozása közti egyensúly megtalálása volt.
+
+\subsection{Túltanulás elleni eszközök}
+
+A tanítás során a túltanulásának fő eszközei ezek a paraméterek voltak:
+\begin{itemize}
+    \item batch méret
+    \item dropout
+    \item paraméterszám
+    \item réteg struktúra
+\end{itemize}
+
+A paraméterek beállítását az is nehezíti, hogy több aspektusban is változtathatják a háló viselkedését, ami más paraméterek egyidejű hozzáigazítását is megköveteli. Például a batch méret növelése nagyobb tanulási sebességet igényel és csökkenti a dropout igényét is.
+
+A batch méretnek is lehet hatása a túltanulásra, mivel a túltanulás lényegében úgy jön létre, hogy a háló a konkrét példákat tanulja meg. De ha biztosítjuk, hogy csak olyan lépést tehet az algoritmus, ami egyszerre sok példára csökkenti a hibát, nehéz egyedi példákat azonosító függvényt létrehozni.
+
+A dropout lényege, hogy egy réteg bemenetein megadott valószínűséggel nullázódnak a tulajdonságok, így nehezíti, hogy a háló beazonosítsa hogy melyik már korábban látott példát kapta bemenetként. Hátránya viszont, hogy a keresett összefüggés megtalálását is nehezíti. A dropout alkalmazható bármely rétegre, de a tanítás során csak a bemeneti rétegre lett alkalmazva.
+
+A paraméterek száma felfogható a hálózat memóriája méretének is, amiből ha a keresett összefüggés megtanulásához szükségesen túl több van, a háló potenciálisan tanító példák megtanulására fordíthatja a kapacitást. Az hogy mennyi a minimális szükséges paraméter gyakorlatilag nem számítható. Léteznek elméletileg bizonyított felső korlátok, egy tetszőleges függvényt leíró neurális hálózat paraméterszámára, de olyan magas becslést adnak, hogy gyakorlatban nem használhatóak. Intuitív módon viszont becsülhető, hogy mekkora méret ami már szinte biztos, hogy fölösleges. Jó becslési alap a példák és paraméterek aránya, például ha minden tanító példára 100-1000 paraméter jut, az több mint valószínű hogy szükségtelen.
+
+\subsection{Optimalizálás folyamata}
+
+
+
+
+\section{Magyarázat generálás folyamata}
+
+\section{Konklúzió}
+
+
+
+%kategorikus változók jobb perturbálása
+%submodualr pick módosítás
+%least angle regression futásidő optimalizálás
